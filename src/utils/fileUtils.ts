@@ -175,51 +175,122 @@ export function isValidGGUFFile(fileName: string): boolean {
 }
 
 /**
- * Mock document picker for web development
- * In production, this would use native document picker
+ * Native document picker using Capacitor FilePicker
+ * Picks a .gguf file and stores it in Documents/Models/
  */
-export async function pickDocument(): Promise<FileInfo | null> {
-  // For web development, simulate file picking
-  if (typeof window !== 'undefined' && !(window as any).Capacitor) {
-    return new Promise((resolve) => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.gguf';
-      
-      input.onchange = (e) => {
-        const file = (e.target as HTMLInputElement).files?.[0];
-        if (file) {
-          resolve({
-            name: file.name,
-            path: URL.createObjectURL(file),
-            size: file.size,
-            mimeType: file.type || 'application/octet-stream'
-          });
-        } else {
-          resolve(null);
-        }
-      };
-      
-      input.oncancel = () => resolve(null);
-      input.click();
+export async function pickAndStoreGguf(): Promise<FileInfo | null> {
+  try {
+    // For web development, use file input
+    if (typeof window !== 'undefined' && !(window as any).Capacitor) {
+      return new Promise((resolve) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.gguf';
+        
+        input.onchange = async (e) => {
+          const file = (e.target as HTMLInputElement).files?.[0];
+          if (file && isValidGGUFFile(file.name)) {
+            // For web, we'll simulate storing it
+            resolve({
+              name: file.name,
+              path: `Documents/Models/${file.name}`,
+              size: file.size,
+              mimeType: file.type || 'application/octet-stream'
+            });
+          } else {
+            resolve(null);
+          }
+        };
+        
+        input.oncancel = () => resolve(null);
+        input.click();
+      });
+    }
+
+    // Use Capacitor FilePicker for native platforms
+    const { FilePicker } = await import('@capawesome/capacitor-file-picker');
+    
+    const result = await FilePicker.pickFiles({
+      types: ['application/octet-stream', '*/*'],
+      readData: true
     });
+    
+    if (!result.files || result.files.length === 0) {
+      return null;
+    }
+    
+    const file = result.files[0];
+    const fileName = file.name || 'model.gguf';
+    
+    // Validate GGUF file
+    if (!isValidGGUFFile(fileName)) {
+      throw new Error('Invalid file type. Please select a .gguf file.');
+    }
+    
+    // Ensure Models directory exists
+    await getModelsDirectory();
+    
+    // Store file in Documents/Models/
+    const destinationPath = `Models/${fileName}`;
+    
+    let fileData: string;
+    if (file.data) {
+      fileData = file.data;
+    } else if (file.blob) {
+      // Convert blob to base64
+      fileData = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          resolve(result.split(',')[1]); // Remove data:mime;base64, prefix
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file.blob!);
+      });
+    } else {
+      throw new Error('No file data available');
+    }
+    
+    await Filesystem.writeFile({
+      path: destinationPath,
+      data: fileData,
+      directory: Directory.Documents
+    });
+    
+    // Get the full URI of the stored file
+    const uri = await Filesystem.getUri({
+      directory: Directory.Documents,
+      path: destinationPath
+    });
+    
+    return {
+      name: fileName,
+      path: uri.uri,
+      size: file.size || 0,
+      mimeType: 'application/octet-stream'
+    };
+    
+  } catch (error) {
+    console.error('Error picking and storing GGUF file:', error);
+    throw error;
   }
-  
-  // TODO: Implement native document picker using Capacitor plugin
-  // For now, return a mock file for testing
-  const mockFiles = [
-    'llama-2-7b-chat.Q4_K_M.gguf',
-    'mistral-7b-instruct-v0.1.Q4_K_M.gguf',
-    'codellama-7b-instruct.Q4_K_M.gguf'
-  ];
-  
-  const randomFile = mockFiles[Math.floor(Math.random() * mockFiles.length)];
-  const randomSize = Math.floor(Math.random() * 7000000000) + 1000000000; // 1-8GB
-  
-  return {
-    name: randomFile,
-    path: `/mock/models/${randomFile}`,
-    size: randomSize,
-    mimeType: 'application/octet-stream'
-  };
+}
+
+/**
+ * Delete a model file from storage
+ */
+export async function deleteStoredModel(modelPath: string): Promise<void> {
+  try {
+    // Extract relative path from full URI if needed
+    const fileName = modelPath.split('/').pop() || '';
+    const relativePath = `Models/${fileName}`;
+    
+    await Filesystem.deleteFile({
+      path: relativePath,
+      directory: Directory.Documents
+    });
+  } catch (error) {
+    console.error('Error deleting model file:', error);
+    throw error;
+  }
 }

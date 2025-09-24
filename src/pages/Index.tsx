@@ -1,7 +1,7 @@
-import NavigationTabs from '@/components/NavigationTabs';
+import MobileTabNavigation from '@/components/MobileTabNavigation';
 
 const Index = () => {
-  return <NavigationTabs />;
+  return <MobileTabNavigation />;
 };
 
 export default Index;

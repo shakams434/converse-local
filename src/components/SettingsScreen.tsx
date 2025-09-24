@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Save, Settings as SettingsIcon, Bot } from 'lucide-react';
 import { useLLMStore } from '@/store/llmStore';
-import { localLLM } from '@/modules/local-llm';
+import LocalLLM from '@/plugins/local-llm';
 import { useToast } from '@/hooks/use-toast';
 
 const SettingsScreen = () => {
@@ -42,7 +42,7 @@ const SettingsScreen = () => {
 
     try {
       setIsApplying(true);
-      await localLLM.setSystemPrompt(localPrompt);
+      await LocalLLM.setSystemPrompt({ prompt: localPrompt });
       setSystemPrompt(localPrompt);
       
       toast({

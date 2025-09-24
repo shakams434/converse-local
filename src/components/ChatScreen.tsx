@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Send, Square, RotateCcw, Bot, User, AlertCircle } from 'lucide-react';
 import { useLLMStore } from '@/store/llmStore';
-import { localLLM } from '@/modules/local-llm';
+import LocalLLM from '@/plugins/local-llm';
 import { useToast } from '@/hooks/use-toast';
 
 const ChatScreen = () => {
@@ -46,7 +46,7 @@ const ChatScreen = () => {
   // Setup token listener
   useEffect(() => {
     if (isGenerating && !tokenListener) {
-      const unsubscribe = localLLM.addTokenListener((token: string) => {
+      const unsubscribe = LocalLLM.addTokenListener((token: string) => {
         updateLastAssistantChunk(token);
       });
       setTokenListener(() => unsubscribe);
@@ -105,10 +105,13 @@ const ChatScreen = () => {
       // Build the final prompt combining system prompt with user input
       const finalPrompt = buildFinalPrompt(userMessage);
       
-      await localLLM.generate(finalPrompt, {
-        maxNewTokens: 150,
-        temperature: 0.7,
-        topP: 0.9
+      await LocalLLM.generate({
+        input: finalPrompt,
+        opts: {
+          maxNewTokens: 150,
+          temperature: 0.7,
+          topP: 0.9
+        }
       });
 
     } catch (error) {
@@ -131,7 +134,7 @@ const ChatScreen = () => {
 
   const handleStopGeneration = async () => {
     try {
-      await localLLM.stop();
+      await LocalLLM.stop();
       setIsGenerating(false);
       toast({
         title: "Generación detenida",
@@ -149,7 +152,7 @@ const ChatScreen = () => {
 
   const handleResetChat = async () => {
     try {
-      await localLLM.reset();
+      await LocalLLM.reset();
       resetChat();
       toast({
         title: "Chat reiniciado",

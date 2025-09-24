@@ -93,44 +93,59 @@ npm install
 npm run dev
 ```
 
-### Compilar para Móvil
+### Mobile Deployment con Capacitor
 
-1. **Exportar a GitHub** desde Lovable
-2. **Clonar el repositorio**:
+Esta app está optimizada para dispositivos móviles usando Capacitor. Sigue estos pasos para ejecutar en Android/iOS:
+
+#### Prerrequisitos
+- Node.js y npm instalados
+- Para Android: Android Studio con SDK
+- Para iOS: macOS con Xcode instalado
+
+#### Pasos de Build y Deploy
+
+1. **Clonar y Setup**
 ```bash
-git clone <YOUR_REPO_URL>
-cd <PROJECT_NAME>
+git clone <your-repo>
+cd <project-folder>
 npm install
 ```
 
-3. **Inicializar Capacitor** (si no está inicializado):
+2. **Agregar Plataformas Móviles** (si no están agregadas)
 ```bash
-npx cap init
-```
-
-4. **Agregar plataformas nativas**:
-```bash
-# Android
 npx cap add android
-
-# iOS (requiere macOS + Xcode)
 npx cap add ios
 ```
 
-5. **Construir y sincronizar**:
+3. **Scripts Disponibles para Móvil**
 ```bash
-npm run build
-npx cap sync
+# Build y sync todas las plataformas
+npm run cap:sync
+
+# Build y abrir Android Studio
+npm run cap:android
+
+# Build y abrir Xcode
+npm run cap:ios
 ```
 
-6. **Ejecutar en dispositivo/emulador**:
-```bash
-# Android
-npx cap run android
+4. **Deploy a Dispositivo**
+- **Android**: Usar Android Studio para ejecutar en emulador o dispositivo conectado
+- **iOS**: Usar Xcode para ejecutar en simulador o dispositivo conectado
 
-# iOS
-npx cap run ios
-```
+#### Características Específicas para Móvil
+
+- **Native File Picker**: Usa `@capawesome/capacitor-file-picker` para seleccionar archivos .gguf
+- **File System**: Los modelos se almacenan en `Documents/Models/` usando `@capacitor/filesystem`
+- **UI Mobile-First**: Navegación con tabs inferiores, controles táctiles optimizados (≥44px), layout de una columna
+- **Capacidad Offline**: Sin dependencias de red, funciona 100% localmente
+
+#### Troubleshooting
+
+- **Android**: Asegurar que USB debugging esté habilitado y el dispositivo sea reconocido
+- **iOS**: Requiere cuenta de Apple Developer para deploy en dispositivo
+- **File Access**: Otorgar permisos de almacenamiento cuando se solicite
+- **Performance**: Usar nCtx recomendado (1024-2048) y nThreads (2-4) para dispositivos móviles
 
 ### Requisitos Móviles
 - **Android**: Android Studio + SDK

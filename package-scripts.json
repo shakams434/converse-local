@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "cap:sync": "vite build && cap sync",
+    "cap:android": "vite build && cap copy android && cap open android", 
+    "cap:ios": "vite build && cap copy ios && cap open ios"
+  }
+}

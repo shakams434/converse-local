@@ -7,8 +7,8 @@ import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Upload, Trash2, Play, Square, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import { useLLMStore } from '@/store/llmStore';
-import { localLLM } from '@/modules/local-llm';
-import { pickDocument, copyToModelsDirectory, formatFileSize, isValidGGUFFile } from '@/utils/fileUtils';
+import LocalLLM from '@/plugins/local-llm';
+import { pickAndStoreGguf, deleteStoredModel, formatFileSize, isValidGGUFFile } from '@/utils/fileUtils';
 import { useToast } from '@/hooks/use-toast';
 
 const ModelManagerScreen = () => {
@@ -67,7 +67,7 @@ const ModelManagerScreen = () => {
     try {
       setIsImporting(true);
       
-      const file = await pickDocument();
+      const file = await pickAndStoreGguf();
       if (!file) return;
 
       if (!isValidGGUFFile(file.name)) {
@@ -79,11 +79,7 @@ const ModelManagerScreen = () => {
         return;
       }
 
-      // For web demo, we'll just set the file info directly
-      // In native app, we would copy to models directory
-      const finalPath = file.path;
-      
-      setModelPath(finalPath);
+      setModelPath(file.path);
       setModelSize(file.size);
       
       toast({
@@ -110,9 +106,9 @@ const ModelManagerScreen = () => {
       setIsLoading(true);
       setEngineStatus('loading', 'Cargando modelo en memoria...');
       
-      const success = await localLLM.loadModel(modelPath, { nCtx, nThreads });
+      const result = await LocalLLM.loadModel({ path: modelPath, opts: { nCtx, nThreads } });
       
-      if (success) {
+      if (result.ok) {
         setEngineStatus('ready', 'Modelo cargado correctamente');
         toast({
           title: "Modelo cargado",
@@ -139,14 +135,26 @@ const ModelManagerScreen = () => {
     }
   };
 
-  const handleDeleteModel = () => {
-    setModelPath(null);
-    setModelSize(null);
-    setEngineStatus('idle');
-    toast({
-      title: "Modelo eliminado",
-      description: "El modelo ha sido eliminado del dispositivo",
-    });
+  const handleDeleteModel = async () => {
+    if (!modelPath) return;
+    
+    try {
+      await deleteStoredModel(modelPath);
+      setModelPath(null);
+      setModelSize(null);
+      setEngineStatus('idle');
+      toast({
+        title: "Modelo eliminado",
+        description: "El modelo ha sido eliminado del dispositivo",
+      });
+    } catch (error) {
+      console.error('Error deleting model:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el archivo del modelo",
+        variant: "destructive",
+      });
+    }
   };
 
   const status = getStatusDisplay();
