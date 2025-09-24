@@ -1,73 +1,213 @@
-# Welcome to your Lovable project
+# AI LLM Assistant - Asistente Bancario Offline
 
-## Project info
+Una aplicación móvil híbrida construida con React + Capacitor que funciona como un "contenedor de modelos" offline para ejecutar modelos LLM localmente.
 
-**URL**: https://lovable.dev/projects/e24ddf41-7389-4a6b-8cc3-ce614c39dec3
+## 🎯 Características Principales
 
-## How can I edit this code?
+- **Gestión de Modelos**: Importa y gestiona archivos .gguf en el dispositivo
+- **Motor LLM Local**: Interfaz para conectar con llama.cpp (actualmente con mock)
+- **Chat Inteligente**: Interface de chat con streaming de respuestas en tiempo real
+- **Configuración Avanzada**: System prompts personalizables y parámetros del motor
+- **100% Offline**: No requiere conexión a internet para funcionar
+- **Móvil Nativo**: Funciona en Android e iOS como app nativa
 
-There are several ways of editing your application.
+## 🏗️ Arquitectura
 
-**Use Lovable**
+### Stack Tecnológico
+- **Frontend**: React 18 + TypeScript + Vite
+- **UI**: Tailwind CSS + shadcn/ui + Tema oscuro optimizado
+- **Estado**: Zustand con persistencia
+- **Móvil**: Capacitor para iOS/Android
+- **Navegación**: Tabs nativas con React Router
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/e24ddf41-7389-4a6b-8cc3-ce614c39dec3) and start prompting.
+### Estructura del Proyecto
+```
+src/
+├── components/          # Pantallas principales
+│   ├── NavigationTabs.tsx
+│   ├── ModelManagerScreen.tsx
+│   ├── ChatScreen.tsx
+│   └── SettingsScreen.tsx
+├── store/              # Estado global (Zustand)
+│   └── llmStore.ts
+├── modules/local-llm/  # Interface del Motor LLM
+│   ├── types.ts        # Interfaces TypeScript
+│   ├── mock.ts         # Implementación mock
+│   └── index.ts        # Factory y exports
+├── utils/              # Utilidades
+│   └── fileUtils.ts    # Gestión de archivos
+└── pages/              # Rutas principales
+    ├── Index.tsx
+    └── NotFound.tsx
+```
 
-Changes made via Lovable will be committed automatically to this repo.
+## 📱 Pantallas
 
-**Use your preferred IDE**
+### 1. Gestor de Modelos (`ModelManagerScreen`)
+- **Importar Modelos**: Selecciona archivos .gguf del dispositivo
+- **Configuración**: nCtx (contexto) y nThreads (hilos de procesamiento)
+- **Estado del Motor**: Idle → Loading → Ready → Error
+- **Control**: Cargar/Recargar modelo en memoria
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 2. Chat (`ChatScreen`)
+- **Interface de Chat**: Burbujas usuario/asistente con timestamps
+- **Streaming**: Respuestas en tiempo real token por token
+- **Controles**: Stop generación, Reset conversación
+- **Estado Visual**: Indicadores de estado del motor
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 3. Configuración (`SettingsScreen`)
+- **System Prompt**: Instrucciones que definen el comportamiento del AI
+- **Configuración**: Forzar respuestas en español
+- **Aplicar al Motor**: Sincronizar configuración con el motor LLM
 
-Follow these steps:
+## 🔧 Native Module Interface
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+El proyecto incluye una interfaz completa para el Native Module que se conectará con llama.cpp:
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+```typescript
+interface LocalLLM {
+  loadModel(path: string, opts?: ModelLoadOptions): Promise<boolean>;
+  setSystemPrompt(prompt: string): Promise<void>;
+  generate(input: string, opts?: GenerationOptions): Promise<void>;
+  stop(): Promise<void>;
+  reset(): Promise<void>;
+  getStatus(): Promise<EngineStatus>;
+  addTokenListener(callback: TokenListener): () => void;
+}
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+### Mock Implementation
+- Simula carga de modelos con delays realistas
+- Streaming de tokens con timing variable
+- Respuestas bancarias predefinidas para testing
+- Control completo de start/stop/reset
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+## 🚀 Cómo Ejecutar
+
+### Desarrollo Web
+```bash
+# Instalar dependencias
+npm install
+
+# Ejecutar en modo desarrollo
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Compilar para Móvil
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+1. **Exportar a GitHub** desde Lovable
+2. **Clonar el repositorio**:
+```bash
+git clone <YOUR_REPO_URL>
+cd <PROJECT_NAME>
+npm install
+```
 
-**Use GitHub Codespaces**
+3. **Inicializar Capacitor** (si no está inicializado):
+```bash
+npx cap init
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+4. **Agregar plataformas nativas**:
+```bash
+# Android
+npx cap add android
 
-## What technologies are used for this project?
+# iOS (requiere macOS + Xcode)
+npx cap add ios
+```
 
-This project is built with:
+5. **Construir y sincronizar**:
+```bash
+npm run build
+npx cap sync
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+6. **Ejecutar en dispositivo/emulador**:
+```bash
+# Android
+npx cap run android
 
-## How can I deploy this project?
+# iOS
+npx cap run ios
+```
 
-Simply open [Lovable](https://lovable.dev/projects/e24ddf41-7389-4a6b-8cc3-ce614c39dec3) and click on Share -> Publish.
+### Requisitos Móviles
+- **Android**: Android Studio + SDK
+- **iOS**: macOS + Xcode + iOS SDK
 
-## Can I connect a custom domain to my Lovable project?
+## 🧪 Testing del Mock
 
-Yes, you can!
+El mock está activo por defecto y simula:
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+1. **Importar modelo**: Archivos .gguf simulados con tamaños realistas
+2. **Cargar en motor**: Delay de 2-3 segundos, luego estado "ready"
+3. **Chat**: Respuestas bancarias en español con streaming
+4. **System prompt**: Aplicación inmediata al motor mock
+5. **Stop/Reset**: Control completo de la generación
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## 🔄 Próximos Pasos
+
+### Reemplazar Mock por Native Module
+
+1. **Android (JNI Bridge)**:
+   - Crear módulo nativo en `android/app/src/main/java/`
+   - Integrar llama.cpp como biblioteca nativa
+   - Implementar callbacks para streaming
+
+2. **iOS (Swift/ObjC Bridge)**:
+   - Crear módulo nativo en `ios/App/App/`
+   - Integrar llama.cpp como framework
+   - Implementar delegates para streaming
+
+3. **Detección de Plataforma**:
+   - Modificar `src/modules/local-llm/index.ts`
+   - Detectar si es web (mock) o nativo (real)
+
+### Estructura Native Modules
+
+```
+native/
+├── android/
+│   ├── LocalLLMModule.java
+│   ├── LlamaEngine.cpp
+│   └── CMakeLists.txt
+├── ios/
+│   ├── LocalLLMModule.swift
+│   ├── LlamaEngine.mm
+│   └── LlamaEngine-Bridging-Header.h
+└── shared/
+    └── llama.cpp/  # Submodule
+```
+
+## 📊 Estado Actual
+
+- ✅ **UI Completa**: Todas las pantallas implementadas
+- ✅ **Mock Funcional**: Testing completo sin motor real
+- ✅ **Estado Persistente**: Configuración guardada en AsyncStorage
+- ✅ **Capacitor Setup**: Listo para compilación móvil
+- ✅ **Streaming UI**: Interface responsive con streaming de tokens
+- ⏳ **Native Module**: Pendiente reemplazar mock por llama.cpp
+
+## 🎨 Design System
+
+- **Colores**: Tema oscuro con acentos azul/verde
+- **Gradientes**: Sutiles para botones y cards
+- **Tipografía**: Inter/Roboto optimizada para móvil
+- **Animaciones**: Transiciones suaves y typing indicators
+- **Responsive**: Optimizado para todas las pantallas
+
+## 💡 Características Técnicas
+
+- **Offline First**: Sin dependencias de red
+- **Performance**: Optimizado para dispositivos con ≤4GB RAM
+- **Persistence**: Estado guardado automáticamente
+- **Error Handling**: Manejo robusto de errores y estados
+- **TypeScript**: Tipado estricto en todo el proyecto
+- **Mobile UX**: Interface táctil optimizada
+
+---
+
+**Estado del Proyecto**: ✅ **Listo para testing y desarrollo del Native Module**
+
+El mock permite probar toda la funcionalidad mientras se desarrolla la integración real con llama.cpp.
