@@ -1,6 +1,7 @@
 /**
  * File utilities for handling model files and storage
  * Uses Capacitor Filesystem API for native file operations
+ * Updated: Mobile-first implementation with native file picker
  */
 
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';

@@ -8,7 +8,12 @@ import { Progress } from "@/components/ui/progress";
 import { Upload, Trash2, Play, Square, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import { useLLMStore } from '@/store/llmStore';
 import LocalLLM from '@/plugins/local-llm';
-import { pickAndStoreGguf, deleteStoredModel, formatFileSize, isValidGGUFFile } from '@/utils/fileUtils';
+import { 
+  pickAndStoreGguf, 
+  deleteStoredModel, 
+  formatFileSize, 
+  isValidGGUFFile 
+} from '@/utils/fileUtils';
 import { useToast } from '@/hooks/use-toast';
 
 const ModelManagerScreen = () => {
