@@ -9,11 +9,11 @@ import { Upload, Trash2, Play, Square, AlertCircle, CheckCircle, Loader2 } from 
 import { useLLMStore } from '@/store/llmStore';
 import LocalLLM from '@/plugins/local-llm';
 import { 
-  pickAndStoreGguf, 
   deleteStoredModel, 
   formatFileSize, 
   isValidGGUFFile 
 } from '@/utils/fileUtils';
+import { importarModeloPorStreaming, ImportProgress } from '@/lib/importModel';
 import { useToast } from '@/hooks/use-toast';
 
 const ModelManagerScreen = () => {
@@ -33,6 +33,7 @@ const ModelManagerScreen = () => {
   const { toast } = useToast();
   const [isImporting, setIsImporting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [importProgress, setImportProgress] = useState<number>(0);
 
   // Status color and icon mapping
   const getStatusDisplay = () => {
@@ -71,11 +72,16 @@ const ModelManagerScreen = () => {
   const handleImportModel = async () => {
     try {
       setIsImporting(true);
+      setImportProgress(0);
       
-      const file = await pickAndStoreGguf();
-      if (!file) return;
-
-      if (!isValidGGUFFile(file.name)) {
+      // Usar nuevo helper con callback de progreso
+      const result = await importarModeloPorStreaming((progress: ImportProgress) => {
+        setImportProgress(progress.progress);
+        console.log(`Progreso: ${progress.progress}% (${progress.bytesCopied}/${progress.totalBytes} bytes)`);
+      });
+      
+      // Validar extensión .gguf
+      if (!isValidGGUFFile(result.fileName)) {
         toast({
           title: "Archivo inválido",
           description: "Solo se permiten archivos .gguf",
@@ -84,23 +90,25 @@ const ModelManagerScreen = () => {
         return;
       }
 
-      setModelPath(file.path);
-      setModelSize(file.size);
+      // Actualizar estado global
+      setModelPath(result.destPath);
+      setModelSize(result.fileSize);
       
       toast({
         title: "Modelo importado",
-        description: `${file.name} (${formatFileSize(file.size)})`,
+        description: `${result.fileName} (${formatFileSize(result.fileSize)})`,
       });
 
     } catch (error) {
       console.error('Error importing model:', error);
       toast({
         title: "Error",
-        description: "No se pudo importar el modelo",
+        description: error instanceof Error ? error.message : "No se pudo importar el modelo",
         variant: "destructive"
       });
     } finally {
       setIsImporting(false);
+      setImportProgress(0);
     }
   };
 
@@ -188,7 +196,7 @@ const ModelManagerScreen = () => {
             {isImporting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Importando...
+                Importando... {importProgress > 0 ? `${importProgress}%` : ''}
               </>
             ) : (
               <>
@@ -197,6 +205,10 @@ const ModelManagerScreen = () => {
               </>
             )}
           </Button>
+
+          {isImporting && importProgress > 0 && (
+            <Progress value={importProgress} className="mt-2" />
+          )}
 
           {modelPath && (
             <Card className="bg-muted/50">

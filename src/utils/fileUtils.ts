@@ -1,7 +1,9 @@
 /**
  * File utilities for handling model files and storage
  * Uses Capacitor Filesystem API for native file operations
- * Updated: Mobile-first implementation with native file picker
+ * 
+ * IMPORTANT: For production use importarModeloPorStreaming() from @/lib/importModel
+ * This file's pickAndStoreGguf() is DEPRECATED (causes OOM with large files)
  */
 
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
@@ -176,10 +178,15 @@ export function isValidGGUFFile(fileName: string): boolean {
 }
 
 /**
+ * @deprecated Use importarModeloPorStreaming() from @/lib/importModel instead
+ * This function loads entire file in memory (causes OOM for large models)
+ * 
  * Native document picker using Capacitor FilePicker
  * Picks a .gguf file and stores it in Documents/Models/
  */
 export async function pickAndStoreGguf(): Promise<FileInfo | null> {
+  console.warn('⚠️ pickAndStoreGguf is deprecated. Use importarModeloPorStreaming() instead.');
+  
   try {
     // For web development, use file input
     if (typeof window !== 'undefined' && !(window as any).Capacitor) {

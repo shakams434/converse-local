@@ -93,6 +93,77 @@ npm install
 npm run dev
 ```
 
+## 🤖 Compilación para Android
+
+### Primera vez (setup inicial)
+
+1. **Exportar a Github** y clonar localmente:
+   ```bash
+   git clone <tu-repo>
+   cd converse-local
+   npm install
+   ```
+
+2. **Agregar plataforma Android**:
+   ```bash
+   npx cap add android
+   npx cap sync android
+   ```
+
+3. **Compilar y abrir en Android Studio**:
+   ```bash
+   npm run build
+   npx cap copy android
+   npx cap open android
+   ```
+
+### Después de cambios (sincronizar)
+
+```bash
+npm run build
+npx cap sync android
+npx cap open android
+```
+
+### Scripts disponibles
+
+- `npm run cap:sync` - Build + sync todas las plataformas
+- `npm run cap:android` - Build + open Android Studio
+- `npm run cap:ios` - Build + open Xcode
+
+---
+
+## 🚀 Importación de Modelos (Sin OOM)
+
+La app usa **streaming por chunks de 64KB** para importar archivos `.gguf` grandes sin cargar todo en memoria.
+
+### Flujo de importación:
+
+1. Usuario selecciona archivo con **FilePicker nativo**
+2. Plugin Android copia por **streaming** a `/files/models/`
+3. Se emiten eventos de progreso (0-100%) en tiempo real
+4. Se retorna `destPath`, `fileSize` y `fileName`
+5. El motor LLM carga desde el path local (offline)
+
+### Eventos de progreso:
+
+```typescript
+const result = await importarModeloPorStreaming((progress) => {
+  console.log(`${progress.progress}% - ${progress.bytesCopied}/${progress.totalBytes} bytes`);
+});
+```
+
+### Troubleshooting:
+
+**OutOfMemoryError durante importación:**
+- ✅ **SOLUCIONADO**: Ahora usa streaming (buffer 64KB)
+- ❌ **NO usar** `readData: true` en FilePicker
+
+**Archivo no se importa:**
+- Verificar permisos de storage en Android
+- Revisar logs de Android Studio (Logcat)
+- Confirmar que el archivo viene de URI válida
+
 ### Mobile Deployment con Capacitor
 
 Esta app está optimizada para dispositivos móviles usando Capacitor. Sigue estos pasos para ejecutar en Android/iOS:
