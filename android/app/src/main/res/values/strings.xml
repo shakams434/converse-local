@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AI LLM Assistant</string>
+    <string name="title_activity_main">AI LLM Assistant</string>
+    <string name="package_name">app.lovable.e24ddf4173894a6b8cc3ce614c39dec3</string>
+    <string name="custom_url_scheme">app.lovable.e24ddf4173894a6b8cc3ce614c39dec3</string>
+</resources>

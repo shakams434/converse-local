@@ -4,12 +4,11 @@ import android.content.Intent
 import android.net.Uri
 import com.getcapacitor.*
 import com.getcapacitor.annotation.CapacitorPlugin
-import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 
-@CapacitorPlugin(name = "ModelImporter")
-class ModelImporterPlugin : Plugin() {
+@CapacitorPlugin(name = "ModelImportert")
+class ModelImportertPlugin : Plugin() {
 
     @PluginMethod
     fun importFromUri(call: PluginCall) {
@@ -29,61 +28,53 @@ class ModelImporterPlugin : Plugin() {
 
             // Obtener tamaño del archivo original
             val totalBytes = try {
-                ctx.contentResolver.openAssetFileDescriptor(uri, "r")?.use { 
-                    it.length 
-                } ?: 0L
-            } catch (e: Exception) {
+                ctx.contentResolver.openAssetFileDescriptor(uri, "r")?.use { it.length } ?: 0L
+            } catch (_: Exception) {
                 0L
             }
 
             // Destino: /data/data/<paquete>/files/models/
-            val modelsDir = File(ctx.filesDir, "models").apply { 
-                if (!exists()) mkdirs() 
-            }
+            val modelsDir = File(ctx.filesDir, "models").apply { if (!exists()) mkdirs() }
             val outFile = File(modelsDir, fileName)
 
             // --- STREAMING CON PROGRESO ---
             var bytesCopied = 0L
             var lastProgressUpdate = 0
-            
+
             ctx.contentResolver.openInputStream(uri).use { input ->
                 FileOutputStream(outFile).use { output ->
-                    val buffer = ByteArray(64 * 1024) // 64KB buffer
+                    val buffer = ByteArray(64 * 1024) // 64KB
                     var bytesRead: Int
-                    
+
                     while (input!!.read(buffer).also { bytesRead = it } != -1) {
                         output.write(buffer, 0, bytesRead)
                         bytesCopied += bytesRead
-                        
-                        // Emitir progreso cada 1% (evitar spam de eventos)
+
+                        // Emitir progreso cada 1%
                         if (totalBytes > 0) {
                             val progress = ((bytesCopied * 100) / totalBytes).toInt()
                             if (progress > lastProgressUpdate) {
                                 lastProgressUpdate = progress
-                                
                                 val progressData = JSObject().apply {
                                     put("progress", progress)
                                     put("bytesCopied", bytesCopied)
                                     put("totalBytes", totalBytes)
                                 }
-                                
                                 notifyListeners("importProgress", progressData)
                             }
                         }
                     }
-                    
                     output.flush()
                     output.fd.sync()
                 }
             }
 
-            // Respuesta con path y tamaño final
-            val ret = JSObject(JSONObject().apply {
+            // Respuesta final
+            val ret = JSObject().apply {
                 put("destPath", outFile.absolutePath)
                 put("fileSize", bytesCopied)
                 put("fileName", fileName)
-            })
-            
+            }
             call.resolve(ret)
 
         } catch (e: Exception) {

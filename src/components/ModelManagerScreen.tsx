@@ -13,7 +13,7 @@ import {
   formatFileSize, 
   isValidGGUFFile 
 } from '@/utils/fileUtils';
-import { importarModeloPorStreaming, ImportProgress } from '@/lib/importModel';
+import { eco, importarModeloPorStreaming, ImportProgress } from '@/lib/importModel';
 import { useToast } from '@/hooks/use-toast';
 
 const ModelManagerScreen = () => {
@@ -75,6 +75,11 @@ const ModelManagerScreen = () => {
       setImportProgress(0);
       
       // Usar nuevo helper con callback de progreso
+  const echoresult = await eco()
+  console.log (echoresult)
+
+
+
       const result = await importarModeloPorStreaming((progress: ImportProgress) => {
         setImportProgress(progress.progress);
         console.log(`Progreso: ${progress.progress}% (${progress.bytesCopied}/${progress.totalBytes} bytes)`);
