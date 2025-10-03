@@ -15,6 +15,7 @@ import {
 } from '@/utils/fileUtils';
 import { eco, importarModeloPorStreaming, ImportProgress } from '@/lib/importModel';
 import { useToast } from '@/hooks/use-toast';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const ModelManagerScreen = () => {
   const {
@@ -179,8 +180,9 @@ const ModelManagerScreen = () => {
   const StatusIcon = status.icon;
 
   return (
-    <div className="container mx-auto p-4 space-y-6 max-w-4xl">
-      {/* Model Import Section */}
+    <ScrollArea className="h-[calc(100vh-8rem)]">
+      <div className="container mx-auto p-4 space-y-6 max-w-4xl pb-8">
+        {/* Model Import Section */}
       <Card className="bg-gradient-card border-border/50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -338,7 +340,8 @@ const ModelManagerScreen = () => {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </ScrollArea>
   );
 };
 
